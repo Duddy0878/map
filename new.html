@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Europe Map - Hebrew State Replacements</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+        mapboxgl.accessToken = "pk.eyJ1IjoiZHVkZHkiLCJhIjoiY21nemp3ODI3MHMwYTJscTJzbm05OWo2ZyJ9.iqT4ssfItnPlcBCGTf0luQ";
+
+        // Enable right-to-left text rendering for Hebrew
+        mapboxgl.setRTLTextPlugin(
+            "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js",
+            null,
+            true
+        );
+
+        const map = new mapboxgl.Map({
+            container: "map",
+            style: "mapbox://styles/duddy/cmgzrp9ec000301r202cwh9lb", // ← your custom style
+            center: [15, 50],
+            zoom: 4.5,
+        });
+
+        map.on("load", () => {
+            // Your Hebrew replacements
+            const hebrewNames = {
+                "Leżajsk": "ליזענסק",
+                "Krakow": "קראקא",
+                "Rzeszów": "רישא",
+                "Nowy Sącz": "צאנז",
+                "Hungary": "הונגריה",
+                "Ukraine": "אוקראינה",
+                "Czechia": "צ׳כיה",
+                "Austria": "אוסטריה",
+                "Germany": "גרמניה",
+                "Lithuania": "ליטא",
+                "Belarus": "בלארוס",
+                "France": "צרפת",
+                "Spain": "ספרד",
+                "Italy": "איטליה"
+            };
+
+            // 🔍 log all layer IDs so you can confirm the right label layers
+            console.log("All layer IDs:", map.getStyle().layers.map(l => l.id));
+
+            // ✅ Common label layer names (adjust if your style uses others)
+            const labelLayers = [
+                "country-label",
+                "state-label",
+                "settlement-major-label",
+                "settlement-minor-label",
+                "place-label",
+                "city-label"
+            ].filter(id => map.getLayer(id));
+
+            // Loop through each label layer and override text/color/size
+            labelLayers.forEach(layerId => {
+                // Replace English names with Hebrew ones
+                map.setLayoutProperty(layerId, "text-field", [
+                    "case",
+                    ["has", ["get", "name_en"], ["literal", hebrewNames]],
+                    ["get", ["get", "name_en"], ["literal", hebrewNames]],
+                    ["get", "name_en"]
+                ]);
+
+                // 🎨 Hebrew labels get a distinct color
+                map.setPaintProperty(layerId, "text-color", [
+                    "case",
+                    ["has", ["get", "name_en"], ["literal", hebrewNames]],
+                    "#1E90FF",   // blue Hebrew text
+                    "#222"       // normal gray for others
+                ]);
+
+                // 🖋 Make Hebrew labels larger
+                map.setLayoutProperty(layerId, "text-size", [
+                    "case",
+                    ["has", ["get", "name_en"], ["literal", hebrewNames]],
+                    16,
+                    12
+                ]);
+
+                // Align text right-to-left for Hebrew
+                map.setLayoutProperty(layerId, "text-anchor", "right");
+            });
+
+            // 💬 Optional: click to inspect label info (for debugging)
+            map.on("click", (e) => {
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: labelLayers
+                });
+                if (features.length) {
+                    const f = features[0];
+                    alert(
+                        "name: " + f.properties.name + "\n" +
+                        "name_en: " + f.properties.name_en
+                    );
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
